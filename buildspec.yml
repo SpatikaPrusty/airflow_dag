@@ -13,7 +13,7 @@ phases:
     commands:
       cd airflow_dag
       git pull
-      aws s3 cp your-updated-file s3://your-s3-bucket-name/your-s3-bucket-directory/
+      aws s3 cp dag_file.py s3://empower-s3-mount/test/test_dag/
 
 artifacts:
   files:
