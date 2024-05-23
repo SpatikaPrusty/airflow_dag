@@ -14,7 +14,7 @@ phases:
       - cd airflow_dag
       - git pull
       - echo $CODEBUILD_BUILD_NUMBER
-      - sed -i 's/fishtownanalytics\/dbt:latest/fishtownanalytics\/dbt:$CODEBUILD_BUILD_NUMBER/' dag_file.py
+      - sed -i `s/fishtownanalytics\/dbt:latest/fishtownanalytics\/dbt:$CODEBUILD_BUILD_NUMBER/` dag_file.py
       - aws s3 cp dag_file.py s3://empower-s3-mount/test/test_dag/
 
 artifacts:
