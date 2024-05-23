@@ -1,59 +1,41 @@
+# dags/dbt_kubernetes_pod_dag.py
+
 from airflow import DAG
+from airflow.utils.dates import days_ago
 from airflow.providers.cncf.kubernetes.operators.kubernetes_pod import KubernetesPodOperator
-from airflow.operators.dummy_operator import DummyOperator
-from airflow.operators.python_operator import PythonOperator
-from datetime import datetime, timedelta
-import pytz
-from airflow.utils.email import send_email
-from airflow.models import Variable
-# from airflow.operators.http_operator import SimpleHttpOperator
-# import json
-
-ecr_image_no = Variable.get("ecr_image_no")
-
-ist_tz = pytz.timezone('Asia/Kolkata')
+from airflow.utils.dates import timedelta
 
 default_args = {
-    'owner': 'Airflow',
-    'start_date': datetime(2024, 4, 26, 0, 0, tzinfo=ist_tz)
+    'owner': 'airflow',
+    'depends_on_past': False,
+    'email_on_failure': False,
+    'email_on_retry': False,
+    'retries': 1,
+    'retry_delay': timedelta(minutes=5),
 }
 
 with DAG(
-        dag_id='Airflow',
-        default_args=default_args,
-        catchup=False,
-        schedule_interval="20 * * * *",
-    ) as dag:
+    'dbt_kubernetes_pod_dag',
+    default_args=default_args,
+    description='A simple DAG to run dbt on Kubernetes without environment variables',
+    schedule_interval=timedelta(days=1),
+    start_date=days_ago(2),
+    tags=['dbt', 'kubernetes'],
+) as dag:
 
-    FnD_load_start = DummyOperator(
-        task_id="FnD_load_start",
-        trigger_rule="all_success",
-    )
-
-    command = 'dbt run -m fct_intrmdry_trnsctn'
-
-    ontology_run = KubernetesPodOperator(
-        task_id='ontology_run',
-        name='ontology_run',
-        namespace="airflow",
-        image=f'Image',
-        image_pull_policy='Always',
-        cmds=["bash", "-c"],
-        arguments=[command],
-        in_cluster=True,
-        is_delete_operator_pod=True,
-        labels={"DBT": "Ontology"},
-        startup_timeout_seconds=300,
-        do_xcom_push=False,
-        trigger_rule='all_success',
+    dbt_run = KubernetesPodOperator(
+        namespace='default',
+        image='fishtownanalytics/dbt:latest',  # Use the appropriate dbt image
+        cmds=["dbt"],
+        arguments=["run"],
+        labels={"app": "dbt"},
+        name="dbt-run",
+        task_id="dbt_run_task",
         get_logs=True,
-        dag=dag,
+        is_delete_operator_pod=True,
+        in_cluster=True,
+        config_file=None,
+        startup_timeout_seconds=600,
     )
 
-
-    FnD_load_End = DummyOperator(
-        task_id="FnD_load_End",
-        trigger_rule="all_success",
-    )
-
-    FnD_load_start > ontology_run > FnD_load_End
+    dbt_run
