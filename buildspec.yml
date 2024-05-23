@@ -6,14 +6,14 @@ phases:
       python: 3.8
   pre_build:
     commands:
-      pip install awscli
-      git clone https://github.com/SpatikaPrusty/airflow_dag.git
+      - pip install awscli
+      - git clone https://github.com/SpatikaPrusty/airflow_dag.git
 
   build:
     commands:
-      cd airflow_dag
-      git pull
-      aws s3 cp dag_file.py s3://empower-s3-mount/test/test_dag/
+      - cd airflow_dag
+      - git pull
+      - aws s3 cp dag_file.py s3://empower-s3-mount/test/test_dag/
 
 artifacts:
   files:
