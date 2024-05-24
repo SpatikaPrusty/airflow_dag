@@ -9,7 +9,6 @@ phases:
       - pip install awscli
       - git clone https://github.com/SpatikaPrusty/airflow_dag.git
       - aws ecr get-login-password --region ap-south-1 | docker login --username AWS --password-stdin 660061364911.dkr.ecr.ap-south-1.amazonaws.com
-      - cd airflow_dag
       - docker build -t 660061364911.dkr.ecr.ap-south-1.amazonaws.com/dag:$CODEBUILD_BUILD_NUMBER .
 
   build:
